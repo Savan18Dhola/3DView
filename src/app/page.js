@@ -5,7 +5,7 @@ const RestaurantScene = dynamic(() => import("@/components/RestaurantScene"), { 
 export default function Home() {
   return (
     <div style={{ height: "100vh", background: "#000" }}>
-      <h1 style={{ color: "white", textAlign: "center" }}>3D Restaurant Table Booking</h1>
+      <h1 style={{ color: "white", textAlign: "center" }}>3D Floor Plan</h1>
       <RestaurantScene />
     </div>
   );

@@ -6,19 +6,20 @@ import { Tooltip } from "@mui/material";
 export default function TableModel() {
     const { scene } = useGLTF("/beach_restaurant.glb", true);
     const [hoveredTable, setHoveredTable] = useState(null);
-    const originalMaterials = useRef(new Map()); // ✅ Persist across renders
+    const originalMaterials = useRef(new Map()); 
+
+    console.log("GLB Scene Data:", scene);
+
 
     const handlePointerOver = (e) => {
         e.stopPropagation();
         const object = e.object;
 
-        console.log('object',object.parent.name)
-
+        console.log('object', object.name, object.parent.name)
         if (object.parent && object.parent.name.trim().toLowerCase().includes("pcylinder")) {
-        console.log('object',object.name,object.parent.name)
 
             if (!originalMaterials.current.has(object)) {
-                originalMaterials.current.set(object, object.material.clone()); // ✅ Store original material
+                originalMaterials.current.set(object, object.material.clone()); 
             }
 
             const newMaterial = object.material.clone();
@@ -39,7 +40,7 @@ export default function TableModel() {
         const object = e.object;
 
         if (originalMaterials.current.has(object)) {
-            object.material = originalMaterials.current.get(object); // ✅ Restore material
+            object.material = originalMaterials.current.get(object); 
             originalMaterials.current.delete(object);
         }
 
