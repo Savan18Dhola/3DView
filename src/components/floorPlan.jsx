@@ -2,6 +2,7 @@
 import { useGLTF, Html } from "@react-three/drei";
 import { useState, useRef, useEffect } from "react";
 import { Tooltip } from "@mui/material";
+import * as THREE from "three";
 
 export default function FloorPlan() {
     const { scene } = useGLTF("/Demo_Stage.glb", true);
@@ -14,6 +15,9 @@ export default function FloorPlan() {
     useEffect(() => {
         scene.traverse((object) => {
             if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
+                object.frustumCulled = false; // Ensure visibility in frustum
+                object.raycast = THREE.Mesh.prototype.raycast; // Improve raycast detection
+
                 if (!object.userData.price) {
                     object.userData.price = `$${Math.floor(Math.random() * 50) + 10}`; // Add price only once
                 }
@@ -51,7 +55,7 @@ export default function FloorPlan() {
                 name: object.name || "Table",
                 price: object.userData.price || "N/A",
                 capacity: object.userData.capacity || "N/A",
-                position: e.intersections[0].point,
+                position: e.intersections[0]?.point || object.position,
                 object: object,
             });
         }
@@ -81,7 +85,8 @@ export default function FloorPlan() {
                 object={scene}
                 onPointerOver={handlePointerOver}
                 onPointerOut={handlePointerOut}
-            // rotation={[0, Math.PI * 1.5, 0]}
+                // rotation={[0, Math.PI * 1.5, 0]}
+                raycast={THREE.Mesh.prototype.raycast}
             />
             {hoveredTable && (
                 <Html position={[hoveredTable.position.x, hoveredTable.position.y + 0.5, hoveredTable.position.z]}>
