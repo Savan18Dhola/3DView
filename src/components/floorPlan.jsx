@@ -56,6 +56,9 @@ export default function FloorPlan() {
                 object: object,
             });
         }
+        else{
+            resetAllMaterials()
+        }
     };
 
     const handlePointerOut = (e) => {
@@ -64,12 +67,15 @@ export default function FloorPlan() {
 
         if (hoveredObject === object) return; // Prevent unnecessary updates
 
+        resetAllMaterials()
+    };
+
+    const resetAllMaterials = () => {
         originalMaterials.current.forEach((material, object) => {
             object.material = material; // Restore original material
         });
-
         originalMaterials.current.clear();
-        setHoveredObject(null); // Reset hovered object
+        setHoveredObject(null);
         setHoveredTable(null);
         document.body.style.cursor = "default";
     };
