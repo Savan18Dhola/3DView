@@ -34,12 +34,9 @@ export default function FloorPlan() {
         const object = e.object;
         if (hoveredObject === object) return;
 
-        console.log('object', object.name)
-        console.log('object', object.name.trim().includes("_Low_Poly_Dining_Table"))
         if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
             document.body.style.cursor = "pointer";
             setHoveredObject(object);
-
             if (!originalMaterials.current.has(object)) {
                 originalMaterials.current.set(object, object.material.clone());
             }
@@ -61,22 +58,20 @@ export default function FloorPlan() {
         }
     };
 
-    console.log('hoveredTable', hoveredTable)
-
     const handlePointerOut = (e) => {
         e.stopPropagation();
         const object = e.object;
 
-        if (hoveredObject !== object) return; // Prevent unnecessary updates
+        if (hoveredObject === object) return; // Prevent unnecessary updates
+
+        originalMaterials.current.forEach((material, object) => {
+            object.material = material; // Restore original material
+        });
+
+        originalMaterials.current.clear();
         setHoveredObject(null); // Reset hovered object
-        document.body.style.cursor = "default";
-
-        if (originalMaterials.current.has(object)) {
-            object.material = originalMaterials.current.get(object);
-            originalMaterials.current.delete(object);
-        }
-
         setHoveredTable(null);
+        document.body.style.cursor = "default";
     };
 
     return (
@@ -85,6 +80,7 @@ export default function FloorPlan() {
                 object={scene}
                 onPointerOver={handlePointerOver}
                 onPointerOut={handlePointerOut}
+                // onPointerMove={handlePointerMove}
                 // rotation={[0, Math.PI * 1.5, 0]}
                 raycast={THREE.Mesh.prototype.raycast}
             />
