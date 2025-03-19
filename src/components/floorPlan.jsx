@@ -6,6 +6,7 @@ import { Tooltip } from "@mui/material";
 export default function FloorPlan() {
     const { scene } = useGLTF("/Demo_Stage.glb", true);
     const [hoveredTable, setHoveredTable] = useState(null);
+    const [hoveredObject, setHoveredObject] = useState(null);
     const originalMaterials = useRef(new Map());
 
     // console.log("GLB Scene Data:", scene);
@@ -27,11 +28,13 @@ export default function FloorPlan() {
     const handlePointerOver = (e) => {
         e.stopPropagation();
         const object = e.object;
+        if (hoveredObject === object) return;
 
         console.log('object', object.name)
         console.log('object', object.name.trim().includes("_Low_Poly_Dining_Table"))
         if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
             document.body.style.cursor = "pointer";
+            setHoveredObject(object);
 
             if (!originalMaterials.current.has(object)) {
                 originalMaterials.current.set(object, object.material.clone());
@@ -60,6 +63,8 @@ export default function FloorPlan() {
         e.stopPropagation();
         const object = e.object;
 
+        if (hoveredObject !== object) return; // Prevent unnecessary updates
+        setHoveredObject(null); // Reset hovered object
         document.body.style.cursor = "default";
 
         if (originalMaterials.current.has(object)) {
