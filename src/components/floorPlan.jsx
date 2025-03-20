@@ -34,7 +34,25 @@ export default function FloorPlan() {
         const object = e.object;
         if (hoveredObject === object) return;
 
-        if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
+        console.log('object',object.name)
+
+        // Detect if the hovered object is the sheet
+        if (object.name.trim().includes("Plane002")) {
+            document.body.style.cursor = "pointer";
+            setHoveredObject(object);
+
+            if (!originalMaterials.current.has(object)) {
+                originalMaterials.current.set(object, object.material.clone());
+            }
+
+            const newMaterial = object.material.clone();
+            newMaterial.transparent = true;
+            newMaterial.color.set('blue');
+            newMaterial.opacity = 0.5;  // Make it semi-transparent
+            object.material = newMaterial;
+        }
+        // Detect if the object is a dining table
+        else if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
             document.body.style.cursor = "pointer";
             setHoveredObject(object);
             if (!originalMaterials.current.has(object)) {
@@ -56,7 +74,7 @@ export default function FloorPlan() {
                 object: object,
             });
         }
-        else{
+        else {
             resetAllMaterials()
         }
     };
