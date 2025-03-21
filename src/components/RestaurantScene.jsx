@@ -11,9 +11,30 @@ export default function RestaurantScene() {
     <Suspense fallback={<div>Loading...</div>}>
       <Canvas shadows camera={{ position: [0, 10, 15], fov: 80 }}>
         {/* Global Lighting */}
-        <ambientLight intensity={0.5} />
-        <directionalLight castShadow position={[3,5,2]} intensity={1} />
-        {/* <hemisphereLight skyColor={"#ffffff"} groundColor={"#444444"} intensity={0.6} /> */}
+        <ambientLight intensity={0.7} />
+        
+        {/* Main directional light */}
+        <directionalLight 
+          castShadow 
+          position={[5, 10, 5]} 
+          intensity={1.2}
+          shadow-mapSize-width={1024}
+          shadow-mapSize-height={1024}
+        />
+        
+        {/* Fill light from opposite side */}
+        <directionalLight 
+          position={[-5, 8, -5]} 
+          intensity={0.6} 
+          color="#ffffff"
+        />
+        
+        {/* Add hemisphere light for more natural lighting */}
+        <hemisphereLight 
+          skyColor={"#ffffff"} 
+          groundColor={"#444444"} 
+          intensity={0.4} 
+        />
 
         {/* Realistic Environment Lighting */}
         <Environment preset="city" />

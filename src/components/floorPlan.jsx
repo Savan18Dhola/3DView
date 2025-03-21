@@ -3,18 +3,27 @@ import { useGLTF, Html } from "@react-three/drei";
 import { useState, useRef, useEffect } from "react";
 import { Tooltip } from "@mui/material";
 import * as THREE from "three";
+import { useFrame } from "@react-three/fiber";
 
 export default function FloorPlan() {
     const { scene } = useGLTF("/Demo_Stage.glb", true);
     const [hoveredTable, setHoveredTable] = useState(null);
     const [hoveredObject, setHoveredObject] = useState(null);
     const originalMaterials = useRef(new Map());
+    const [isPlaneVisible, setIsPlaneVisible] = useState(false);
+
+    const planeObject = useRef(null); // Store reference to Plane002
 
     // console.log("GLB Scene Data:", scene);
     // **Add price to each table when the scene loads**
     useEffect(() => {
         scene.traverse((object) => {
-            if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
+            if (object.name.trim().includes("Plane002")) {
+                planeObject.current = object; // Store reference
+                console.log("Added border lines with EdgesGeometry");
+            }
+
+            else if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
                 object.frustumCulled = false; // Ensure visibility in frustum
                 object.raycast = THREE.Mesh.prototype.raycast; // Improve raycast detection
 
@@ -28,13 +37,46 @@ export default function FloorPlan() {
         });
     }, [scene]);
 
+    useFrame(({ camera }) => {
+        if (planeObject.current) {
+            const frustum = new THREE.Frustum();
+            const cameraViewProjectionMatrix = new THREE.Matrix4();
+            camera.updateMatrixWorld();
+            camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+            camera.projectionMatrix.copy(camera.projectionMatrix);
+            cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+            frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+
+            const isVisible = frustum.intersectsObject(planeObject.current);
+            if (isVisible !== isPlaneVisible) {
+                setIsPlaneVisible(isVisible);
+                updatePlaneMaterial(isVisible);
+            }
+        }
+    });
+
+    const updatePlaneMaterial = (isVisible) => {
+        if (!planeObject.current) return;
+
+        // Create a new material based on the first image's green transparent style
+        const newMaterial = new THREE.MeshBasicMaterial({  // Changed to MeshBasicMaterial
+            transparent: true,
+            opacity: 0.6,                // Higher opacity for more visibility
+            color: new THREE.Color("#00ff6c"),  // Same green color
+            depthWrite: false,           // Prevents z-fighting
+            side: THREE.DoubleSide,      // Visible from both sides
+        });
+
+        planeObject.current.material = newMaterial;
+    };
+
 
     const handlePointerOver = (e) => {
         e.stopPropagation();
         const object = e.object;
         if (hoveredObject === object) return;
 
-        console.log('object',object.name)
+        console.log('object', object)
 
         // Detect if the hovered object is the sheet
         if (object.name.trim().includes("Plane002")) {
@@ -45,10 +87,15 @@ export default function FloorPlan() {
                 originalMaterials.current.set(object, object.material.clone());
             }
 
-            const newMaterial = object.material.clone();
-            newMaterial.transparent = true;
-            newMaterial.color.set('blue');
-            newMaterial.opacity = 0.5;  // Make it semi-transparent
+            // Create a new MeshBasicMaterial for hover state
+            const newMaterial = new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0.6,                // Match the opacity from updatePlaneMaterial
+                color: new THREE.Color('#4e49e8'),  // Keep the purple hover color
+                depthWrite: false,           // Prevents z-fighting
+                side: THREE.DoubleSide       // Visible from both sides
+            });
+
             object.material = newMaterial;
         }
         // Detect if the object is a dining table
@@ -59,11 +106,12 @@ export default function FloorPlan() {
                 originalMaterials.current.set(object, object.material.clone());
             }
 
+            
             const newMaterial = object.material.clone();
-            newMaterial.color.set('blue');
-            newMaterial.emissive.set("#300000"); // Slight glow effect
-            newMaterial.roughness = 0.8; // Less reflective
-            newMaterial.metalness = 0.2; // Less metallic
+            newMaterial.color.set('#4e49e8');
+            newMaterial.emissive.set("#4e49e8"); // Slight glow effect
+            newMaterial.roughness = 0.9; // Less reflective
+            newMaterial.metalness = 0.1; // Less metallic
             object.material = newMaterial;
 
             setHoveredTable({
