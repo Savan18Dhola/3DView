@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 
 export default function FloorPlan() {
-    const { scene } = useGLTF("/Demo_Stage.glb", true);
+    const { scene } = useGLTF("/Demo.glb", true);
     const [hoveredTable, setHoveredTable] = useState(null);
     const [hoveredObject, setHoveredObject] = useState(null);
     const originalMaterials = useRef(new Map());
@@ -18,11 +18,16 @@ export default function FloorPlan() {
     // **Add price to each table when the scene loads**
     useEffect(() => {
         scene.traverse((object) => {
-            if (object.name.trim().includes("Plane002")) {
-                planeObject.current = object; // Store reference
-                console.log("Added border lines with EdgesGeometry");
+            if (object.name.trim().includes("Plane002") || object.name.trim() === "Cube019") {
+                object.material = new THREE.MeshBasicMaterial({
+                    transparent: true,
+                    opacity: 0.5, // Set to low opacity initially
+                    color: new THREE.Color("#00ff6c"),
+                    depthWrite: false,  // Prevent depth issues
+                    depthTest: true,     // Ensure proper rendering
+                    side: THREE.DoubleSide,
+                });
             }
-
             else if (object.name.trim().includes("_Low_Poly_Dining_Table")) {
                 object.frustumCulled = false; // Ensure visibility in frustum
                 object.raycast = THREE.Mesh.prototype.raycast; // Improve raycast detection
@@ -37,38 +42,39 @@ export default function FloorPlan() {
         });
     }, [scene]);
 
-    useFrame(({ camera }) => {
-        if (planeObject.current) {
-            const frustum = new THREE.Frustum();
-            const cameraViewProjectionMatrix = new THREE.Matrix4();
-            camera.updateMatrixWorld();
-            camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-            camera.projectionMatrix.copy(camera.projectionMatrix);
-            cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-            frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
+    // useFrame(({ camera }) => {
+    //     if (planeObject.current) {
+    //         const frustum = new THREE.Frustum();
+    //         const cameraViewProjectionMatrix = new THREE.Matrix4();
+    //         camera.updateMatrixWorld();
+    //         camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+    //         camera.projectionMatrix.copy(camera.projectionMatrix);
+    //         cameraViewProjectionMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    //         frustum.setFromProjectionMatrix(cameraViewProjectionMatrix);
 
-            const isVisible = frustum.intersectsObject(planeObject.current);
-            if (isVisible !== isPlaneVisible) {
-                setIsPlaneVisible(isVisible);
-                updatePlaneMaterial(isVisible);
-            }
-        }
-    });
+    //         const isVisible = frustum.intersectsObject(planeObject.current);
+    //         if (isVisible !== isPlaneVisible) {
+    //             setIsPlaneVisible(isVisible);
+    //             updatePlaneMaterial(isVisible);
+    //         }
+    //     }
+    // });
 
-    const updatePlaneMaterial = (isVisible) => {
-        if (!planeObject.current) return;
+    // const updatePlaneMaterial = (isVisible) => {
+    //     if (!planeObject.current) return;
 
-        // Create a new material based on the first image's green transparent style
-        const newMaterial = new THREE.MeshBasicMaterial({  // Changed to MeshBasicMaterial
-            transparent: true,
-            opacity: 0.6,                // Higher opacity for more visibility
-            color: new THREE.Color("#00ff6c"),  // Same green color
-            depthWrite: false,           // Prevents z-fighting
-            side: THREE.DoubleSide,      // Visible from both sides
-        });
+    //     // Create a new material based on the first image's green transparent style
+    //     const newMaterial = new THREE.MeshBasicMaterial({  // Changed to MeshBasicMaterial
+    //         transparent: true,
+    //         opacity: 0.6,                // Higher opacity for more visibility
+    //         color: new THREE.Color("#00ff6c"),  // Same green color
+    //         depthWrite: true,  // Ensure depth buffer writes to avoid layering issues
+    //         depthTest: false,  // Allow transparency sorting
+    //         side: THREE.DoubleSide,      // Visible from both sides
+    //     });
 
-        planeObject.current.material = newMaterial;
-    };
+    //     planeObject.current.material = newMaterial;
+    // };
 
 
     const handlePointerOver = (e) => {
@@ -76,7 +82,7 @@ export default function FloorPlan() {
         const object = e.object;
         if (hoveredObject === object) return;
 
-        console.log('object', object)
+        console.log('object', object.name)
 
         // Detect if the hovered object is the sheet
         if (object.name.trim().includes("Plane002")) {
@@ -90,9 +96,30 @@ export default function FloorPlan() {
             // Create a new MeshBasicMaterial for hover state
             const newMaterial = new THREE.MeshBasicMaterial({
                 transparent: true,
-                opacity: 0.6,                // Match the opacity from updatePlaneMaterial
+                opacity: 0.5,                // Match the opacity from updatePlaneMaterial
                 color: new THREE.Color('#4e49e8'),  // Keep the purple hover color
-                depthWrite: false,           // Prevents z-fighting
+                depthWrite: true,  // Ensure depth buffer writes to avoid layering issues
+                depthTest: false,  // Allow transparency sorting
+                side: THREE.DoubleSide       // Visible from both sides
+            });
+
+            object.material = newMaterial;
+        }
+        else if (object.name.trim() === "Cube019") {
+            document.body.style.cursor = "pointer";
+            setHoveredObject(object);
+
+            if (!originalMaterials.current.has(object)) {
+                originalMaterials.current.set(object, object.material.clone());
+            }
+
+            // Create a new MeshBasicMaterial for hover state
+            const newMaterial = new THREE.MeshBasicMaterial({
+                transparent: true,
+                opacity: 0.4,                // Match the opacity from updatePlaneMaterial
+                color: new THREE.Color('#4e49e8'),  // Keep the purple hover color
+                depthWrite: true,  // Ensure depth buffer writes to avoid layering issues
+                depthTest: false,  // Allow transparency sorting
                 side: THREE.DoubleSide       // Visible from both sides
             });
 
@@ -106,7 +133,7 @@ export default function FloorPlan() {
                 originalMaterials.current.set(object, object.material.clone());
             }
 
-            
+
             const newMaterial = object.material.clone();
             newMaterial.color.set('#4e49e8');
             newMaterial.emissive.set("#4e49e8"); // Slight glow effect

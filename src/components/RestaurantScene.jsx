@@ -9,7 +9,7 @@ import FloorPlan from "./floorPlan";
 export default function RestaurantScene() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Canvas shadows camera={{ position: [0, 10, 15], fov: 80 }}>
+      <Canvas shadows={false} camera={{ position: [0, 10, 15], fov: 80 }}>
         {/* Global Lighting */}
         <ambientLight intensity={0.7} />
         
@@ -30,11 +30,11 @@ export default function RestaurantScene() {
         />
         
         {/* Add hemisphere light for more natural lighting */}
-        <hemisphereLight 
+        {/* <hemisphereLight 
           skyColor={"#ffffff"} 
           groundColor={"#444444"} 
           intensity={0.4} 
-        />
+        /> */}
 
         {/* Realistic Environment Lighting */}
         <Environment preset="city" />
